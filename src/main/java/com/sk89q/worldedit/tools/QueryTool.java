@@ -39,11 +39,10 @@ public class QueryTool implements BlockTool {
         LocalWorld world = clicked.getWorld();
         EditSession editSession = WorldEdit.getInstance().getEditSessionFactory().getEditSession(world, 0, player);
         BaseBlock block = (editSession).rawGetBlock(clicked);
-        BlockType type = BlockType.fromID(block.getType());
 
         player.print("\u00A79@" + clicked + ": " + "\u00A7e"
                 + "#" + block.getType() + "\u00A77" + " ("
-                + (type == null ? "Unknown" : type.getName()) + ") "
+                + BlockType.getName(block.getType()) + ") "
                 + "\u00A7f"
                 + "[" + block.getData() + "]" + " (" + world.getBlockLightLevel(clicked) + "/" + world.getBlockLightLevel(clicked.add(0, 1, 0)) + ")");
 

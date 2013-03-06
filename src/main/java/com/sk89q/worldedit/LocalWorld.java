@@ -404,7 +404,7 @@ public abstract class LocalWorld implements World {
      * @return
      */
     public boolean isValidBlockType(int type) {
-        return BlockType.fromID(type) != null;
+        return true;
     }
 
     /**
@@ -415,7 +415,8 @@ public abstract class LocalWorld implements World {
      */
     public boolean usesBlockData(int type) {
         // We future proof here by assuming all unknown blocks use data
-        return BlockType.usesData(type) || BlockType.fromID(type) == null;
+		// Zenexer: The future is now!
+        return true;
     }
 
     /**

@@ -98,9 +98,6 @@ public class WorldEditPlugin extends JavaPlugin {
 
         // Make the data folders that WorldEdit uses
         getDataFolder().mkdirs();
-        File targetDir = new File(getDataFolder() + File.separator + "nmsblocks");
-        targetDir.mkdir();
-        copyNmsBlockClasses(targetDir);
 
         // Create the default configuration file
         createDefaultConfiguration("config.yml");
@@ -125,32 +122,6 @@ public class WorldEditPlugin extends JavaPlugin {
 
         getServer().getScheduler().scheduleAsyncRepeatingTask(this,
                 new SessionTimer(controller, getServer()), 120, 120);
-    }
-
-    private void copyNmsBlockClasses(File target) {
-        try {
-            JarFile jar = new JarFile(getFile());
-            Enumeration entries = jar.entries();
-            while (entries.hasMoreElements()) {
-                JarEntry jarEntry = (JarEntry) entries.nextElement();
-                if (!jarEntry.getName().startsWith("nmsblocks") || jarEntry.isDirectory()) continue;
-
-                File file = new File(target + File.separator + jarEntry.getName().replace("nmsblocks", ""));
-                if (file.exists()) continue;
-
-                InputStream is = jar.getInputStream(jarEntry);
-                FileOutputStream fos = new FileOutputStream(file);
-
-                fos = new FileOutputStream(file);
-                byte[] buf = new byte[8192];
-                int length = 0;
-                while ((length = is.read(buf)) > 0) {
-                    fos.write(buf, 0, length);
-                }
-                fos.close();
-                is.close();
-            }
-        } catch (Throwable e) {}
     }
 
     /**

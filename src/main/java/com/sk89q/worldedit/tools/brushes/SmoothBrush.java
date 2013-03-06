@@ -32,15 +32,14 @@ import com.sk89q.worldedit.regions.Region;
 
 public class SmoothBrush implements Brush {
     private int iterations;
-    private boolean naturalOnly;
 
     public SmoothBrush(int iterations) {
         this(iterations, false);
     }
 
+	@Deprecated
     public SmoothBrush(int iterations, boolean naturalOnly) {
         this.iterations = iterations;
-        this.naturalOnly = naturalOnly;
     }
 
     public void build(EditSession editSession, Vector pos, Pattern mat, double size)
@@ -49,7 +48,7 @@ public class SmoothBrush implements Brush {
         WorldVector min = new WorldVector(editSession.getWorld(), pos.subtract(rad, rad, rad));
         Vector max = pos.add(rad, rad + 10, rad);
         Region region = new CuboidRegion(editSession.getWorld(), min, max);
-        HeightMap heightMap = new HeightMap(editSession, region, naturalOnly);
+        HeightMap heightMap = new HeightMap(editSession, region);
         HeightMapFilter filter = new HeightMapFilter(new GaussianKernel(5, 1.0));
         heightMap.applyFilter(filter, iterations);
     }

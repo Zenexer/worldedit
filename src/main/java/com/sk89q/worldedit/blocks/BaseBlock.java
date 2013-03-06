@@ -167,4 +167,10 @@ public class BaseBlock extends Block {
         }
         return false;
     }
+
+	@Override
+	public int hashCode()
+	{
+		return toString().hashCode();
+	}
 }

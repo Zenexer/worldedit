@@ -70,7 +70,9 @@ public class BlockReplacer implements DoubleActionBlockTool {
         targetBlock = (editSession).getBlock(clicked);
         BlockType type = BlockType.fromID(targetBlock.getType());
 
-        if (type != null) {
+        if (type == null) {
+			player.print("Replacer tool switch.");
+		} else {
             player.print("Replacer tool switched to: " + type.getName());
         }
 

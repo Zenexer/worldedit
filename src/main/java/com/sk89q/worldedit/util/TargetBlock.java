@@ -134,8 +134,11 @@ public class TargetBlock {
      * @return Block
      */
     public BlockWorldVector getTargetBlock() {
-        while (getNextBlock() != null && world.getBlockType(getCurrentBlock()) == 0) ;
-        return getCurrentBlock();
+		BlockWorldVector block;
+		for (block = getNextBlock(); block != null && world.getBlockType(block) == 0; ) {
+			block = getNextBlock();
+		}
+		return block;
     }
 
     /**
@@ -145,8 +148,11 @@ public class TargetBlock {
      * @return Block
      */
     public BlockWorldVector getSolidTargetBlock() {
-        while (getNextBlock() != null && BlockType.canPassThrough(world.getBlockType(getCurrentBlock()))) ;
-        return getCurrentBlock();
+		BlockWorldVector block;
+		for (block = getNextBlock(); block != null && world.getBlockType(block) <= 0; ) {
+			block = getNextBlock();
+		}
+		return block;
     }
 
     /**

@@ -46,25 +46,11 @@ import com.sk89q.worldedit.data.DataException;
  */
 public class Block implements TileEntityBlock {
     
-    /**
-     * Indicates the highest possible block ID (inclusive) that can be used. This value
-     * is subject to change depending on the implementation, but internally this class
-     * only supports a range of 4096 IDs (for space reasons), which coincides with the
-     * number of possible IDs that official Minecraft supports as of version 1.3.
-     */
-    public static final int MAX_ID = 4095;
-    
-    /**
-     * Indicates the maximum data value (inclusive) that can be used. Minecraft 1.4 may
-     * abolish usage of data values and this value may be removed in the future.
-     */
-    public static final int MAX_DATA = 15;
-    
     // Instances of this class should be _as small as possible_ because there will
     // be millions of instances of this object.
     
-    private short id;
-    private short data;
+    private int id;
+    private int data;
     private CompoundTag nbtData;
     
     /**
@@ -74,8 +60,7 @@ public class Block implements TileEntityBlock {
      * @see #setId(int)
      */
     public Block(int id) {
-        setId(id);
-        setData(0);
+		setId(id);
     }
     
     /**
@@ -87,8 +72,8 @@ public class Block implements TileEntityBlock {
      * @see #setData(int)
      */
     public Block(int id, int data) {
-        setId(id);
-        setData(data);
+		setId(id);
+		setData(data);
     }
     
     /**
@@ -103,9 +88,9 @@ public class Block implements TileEntityBlock {
      * @see #setNbtData(CompoundTag)
      */
     public Block(int id, int data, CompoundTag nbtData) throws DataException {
-        setId(id);
-        setData(data);
-        setNbtData(nbtData);
+		setId(id);
+		setData(data);
+		setNbtData(nbtData);
     }
     
     /**
@@ -122,17 +107,12 @@ public class Block implements TileEntityBlock {
      * 
      * @param id block id (between 0 and {@link #MAX_ID}).
      */
-    public void setId(int id) {
-        if (id > MAX_ID) {
-            throw new IllegalArgumentException("Can't have a block ID above "
-                    + MAX_ID + " (" + id + " given)");
-        }
-
+    public final void setId(int id) {
         if (id < 0) {
             throw new IllegalArgumentException("Can't have a block ID below 0");
         }
         
-        this.id = (short) id;
+        this.id = id;
     }
     
     /**
@@ -149,18 +129,12 @@ public class Block implements TileEntityBlock {
      * 
      * @param data block data value (between 0 and {@link #MAX_DATA}).
      */
-    public void setData(int data) {
-        if (data > MAX_DATA) {
-            throw new IllegalArgumentException(
-                    "Can't have a block data value above " + MAX_DATA + " ("
-                            + data + " given)");
-        }
-        
+    public final void setData(int data) {
         if (data < -1) {
             throw new IllegalArgumentException("Can't have a block data value below -1");
         }
         
-        this.data = (short) data;
+        this.data = data;
     }
     
     /**
@@ -226,5 +200,33 @@ public class Block implements TileEntityBlock {
     public String toString() {
         return "Block{ID:" + getId() + ", Data: " + getData() + "}";
     }
+
+	@Override
+	public boolean equals(Object obj)
+	{
+		if (obj == null)
+		{
+			return false;
+		}
+		if (getClass() != obj.getClass())
+		{
+			return false;
+		}
+		
+		final Block other = (Block)obj;
+		if (this.id != other.id)
+		{
+			return false;
+		}
+		if (this.data != other.data)
+		{
+			return false;
+		}
+		if (this.nbtData != other.nbtData && (this.nbtData == null || !this.nbtData.equals(other.nbtData)))
+		{
+			return false;
+		}
+		return true;
+	}
     
 }

@@ -1133,7 +1133,7 @@ public class WorldEdit {
                         ? type.getName() + " (" + id + ")"
                         : id.toString());
 
-                str.append(" [Amt: " + missingBlocks.get(id) + "]");
+                str.append(" [Amt: ").append(missingBlocks.get(id)).append("]");
 
                 ++i;
 

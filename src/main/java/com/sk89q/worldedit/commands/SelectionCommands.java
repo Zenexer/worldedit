@@ -634,7 +634,7 @@ public class SelectionCommands {
 
         if (useData) {
             for (Countable<BaseBlock> c : distributionData) {
-                String name = BlockType.fromID(c.getID().getId()).getName();
+                String name = BlockType.getName(c.getID().getId());
                 String str = String.format("%-7s (%.3f%%) %s #%d:%d",
                         String.valueOf(c.getAmount()),
                         c.getAmount() / (double) size * 100,
@@ -644,11 +644,10 @@ public class SelectionCommands {
             }
         } else {
             for (Countable<Integer> c : distribution) {
-                BlockType block = BlockType.fromID(c.getID());
                 String str = String.format("%-7s (%.3f%%) %s #%d",
                         String.valueOf(c.getAmount()),
                         c.getAmount() / (double) size * 100,
-                        block == null ? "Unknown" : block.getName(), c.getID());
+                        BlockType.getName(c.getID()), c.getID());
                 player.print(str);
             }
         }

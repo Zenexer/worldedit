@@ -101,18 +101,6 @@ public class BukkitWorld extends LocalWorld {
 
     private static final Logger logger = WorldEdit.logger;
     private World world;
-    private boolean skipNmsAccess = false;
-    private boolean skipNmsSafeSet = false;
-    private boolean skipNmsValidBlockCheck = false;
-
-    /*
-     * holder for the nmsblock class that we should use
-     */
-    private static Class<? extends NmsBlock> nmsBlockType;
-    private static Method nmsSetMethod;
-    private static Method nmsValidBlockMethod;
-    private static Method nmsGetMethod;
-    private static Method nmsSetSafeMethod;
 
     /**
      * Construct the object.
@@ -120,116 +108,6 @@ public class BukkitWorld extends LocalWorld {
      */
     public BukkitWorld(World world) {
         this.world = world;
-
-        // check if we have a class we can use for nms access
-
-        // only run once per server startup
-        if (nmsBlockType != null || skipNmsAccess || skipNmsSafeSet || skipNmsValidBlockCheck) return;
-        Plugin plugin = Bukkit.getPluginManager().getPlugin("WorldEdit");
-        if (!(plugin instanceof WorldEditPlugin)) return; // hopefully never happens
-        WorldEditPlugin wePlugin = ((WorldEditPlugin) plugin);
-        File nmsBlocksDir = new File(wePlugin.getDataFolder() + File.separator + "nmsblocks" + File.separator);
-        if (nmsBlocksDir.listFiles() == null) { // no files to use
-            skipNmsAccess = true; skipNmsSafeSet = true; skipNmsValidBlockCheck = true;
-            return;
-        }
-        try {
-            // make a classloader that can handle our blocks
-            NmsBlockClassLoader loader = new NmsBlockClassLoader(BukkitWorld.class.getClassLoader(), nmsBlocksDir);
-            String filename;
-            for (File f : nmsBlocksDir.listFiles()) {
-                if (!f.isFile()) continue;
-                filename = f.getName();
-                // load class using magic keyword
-                Class<?> testBlock = null;
-                try {
-                    testBlock = loader.loadClass("CL-NMS" + filename);
-                } catch (Throwable e) {
-                    // someone is putting things where they don't belong
-                    continue;
-                }
-                filename = filename.replaceFirst(".class$", ""); // get rid of extension
-                if (NmsBlock.class.isAssignableFrom(testBlock)) {
-                    // got a NmsBlock, test it now
-                    Class<? extends NmsBlock> nmsClass = (Class<? extends NmsBlock>) testBlock;
-                    boolean canUse = false;
-                    try {
-                        canUse = (Boolean) nmsClass.getMethod("verify", null).invoke(null, null);
-                    } catch (Throwable e) {
-                        continue;
-                    }
-                    if (!canUse) continue; // not for this server
-                    nmsBlockType = nmsClass;
-                    nmsSetMethod = nmsBlockType.getMethod("set", World.class, Vector.class, BaseBlock.class);
-                    nmsValidBlockMethod = nmsBlockType.getMethod("isValidBlockType", int.class);
-                    nmsGetMethod = nmsBlockType.getMethod("get", World.class, Vector.class, int.class, int.class);
-                    nmsSetSafeMethod = nmsBlockType.getMethod("setSafely",
-                            BukkitWorld.class, Vector.class, com.sk89q.worldedit.foundation.Block.class, boolean.class);
-                    // phew
-                    break;
-                }
-            }
-            if (nmsBlockType != null) {
-                logger.info("[WorldEdit] Using external NmsBlock for this version: " + nmsBlockType.getName());
-            } else {
-                // try our default
-                try {
-                    nmsBlockType = (Class<? extends NmsBlock>) Class.forName("com.sk89q.worldedit.bukkit.DefaultNmsBlock");
-                    boolean canUse = (Boolean) nmsBlockType.getMethod("verify", null).invoke(null, null);
-                    if (canUse) {
-                        nmsSetMethod = nmsBlockType.getMethod("set", World.class, Vector.class, BaseBlock.class);
-                        nmsValidBlockMethod = nmsBlockType.getMethod("isValidBlockType", int.class);
-                        nmsGetMethod = nmsBlockType.getMethod("get", World.class, Vector.class, int.class, int.class);
-                        nmsSetSafeMethod = nmsBlockType.getMethod("setSafely",
-                                BukkitWorld.class, Vector.class, com.sk89q.worldedit.foundation.Block.class, boolean.class);
-                        logger.info("[WorldEdit] Using inbuilt NmsBlock for this version.");
-                    }
-                } catch (Throwable e) {
-                    // OMG DEVS WAI U NO SUPPORT <xyz> SERVER
-                    skipNmsAccess = true; skipNmsSafeSet = true; skipNmsValidBlockCheck = true;
-                    logger.warning("[WorldEdit] No compatible nms block class found.");
-                }
-            }
-        } catch (Throwable e) {
-            logger.warning("[WorldEdit] Unable to load NmsBlock classes, make sure they are installed correctly.");
-            e.printStackTrace();
-            skipNmsAccess = true; skipNmsSafeSet = true; skipNmsValidBlockCheck = true;
-        }
-    }
-
-    private class NmsBlockClassLoader extends ClassLoader {
-        public File searchDir;
-        public NmsBlockClassLoader(ClassLoader parent, File searchDir) {
-            super(parent);
-            this.searchDir = searchDir;
-        }
-
-        @Override
-        public Class<?> loadClass(String name) throws ClassNotFoundException {
-            if (!name.startsWith("CL-NMS")) {
-                return super.loadClass(name);
-            } else {
-                name = name.replace("CL-NMS", ""); // hacky lol
-            }
-            try {
-                URL url = new File(searchDir, name).toURI().toURL();
-                InputStream input = url.openConnection().getInputStream();
-                ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-
-                int data = input.read();
-                while (data != -1) {
-                    buffer.write(data);
-                    data = input.read();
-                }
-                input.close();
-
-                byte[] classData = buffer.toByteArray();
-
-                return defineClass(name.replaceFirst(".class$", ""), classData, 0, classData.length);
-            } catch (Throwable e) {
-                throw new ClassNotFoundException();
-            }
-        }
     }
 
     /**
@@ -577,15 +455,6 @@ public class BukkitWorld extends LocalWorld {
             if (we.getOwner() != null && !we.getOwner().isEmpty()) bukkit.setOwner(we.getOwner());
             bukkit.update(true);
             return true;
-        }
-
-        if (!skipNmsAccess) {
-            try {
-                return (Boolean) nmsSetMethod.invoke(null, world, pt, block);
-            } catch (Throwable t) {
-                logger.log(Level.WARNING, "WorldEdit: Failed to do NMS access for direct NBT data copy", t);
-                skipNmsAccess = true;
-            }
         }
 
         return false;
@@ -1188,13 +1057,6 @@ public class BukkitWorld extends LocalWorld {
      */
     @Override
     public boolean isValidBlockType(int type) {
-        if (!skipNmsValidBlockCheck) {
-            try {
-                return (Boolean) nmsValidBlockMethod.invoke(null, type);
-            } catch (Throwable e) {
-                skipNmsValidBlockCheck = true;
-            }
-        }
         return Material.getMaterial(type) != null && Material.getMaterial(type).isBlock();
     }
 
@@ -1303,20 +1165,6 @@ public class BukkitWorld extends LocalWorld {
         case BlockID.NOTE_BLOCK:
         case BlockID.HEAD:
             return super.getBlock(pt);
-        default:
-            if (!skipNmsAccess) {
-                try {
-                    NmsBlock block = null;
-                    block = (NmsBlock) nmsGetMethod.invoke(null, getWorld(), pt, type, data);
-                    if (block != null) {
-                        return block;
-                    }
-                } catch (Throwable t) {
-                    logger.log(Level.WARNING,
-                            "WorldEdit: Failed to do NMS access for direct NBT data copy", t);
-                    skipNmsAccess = true;
-                }
-            }
         }
 
         return super.getBlock(pt);
@@ -1324,15 +1172,6 @@ public class BukkitWorld extends LocalWorld {
 
     @Override
     public boolean setBlock(Vector pt, com.sk89q.worldedit.foundation.Block block, boolean notifyAdjacent) {
-        if (!skipNmsSafeSet) {
-            try {
-                return (Boolean) nmsSetSafeMethod.invoke(null, this, pt, block, notifyAdjacent);
-            } catch (Throwable t) {
-                logger.log(Level.WARNING, "WorldEdit: Failed to do NMS safe block set", t);
-                skipNmsSafeSet = true;
-            }
-        }
-
         return super.setBlock(pt, block, notifyAdjacent);
     }
 }

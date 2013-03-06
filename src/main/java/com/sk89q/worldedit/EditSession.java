@@ -193,13 +193,13 @@ public class EditSession {
 
         final int existing = world.getBlockType(pt);
 
-        // Clear the container block so that it doesn't drop items
-        if (BlockType.isContainerBlock(existing)) {
-            world.clearContainerBlockContents(pt);
             // Ice turns until water so this has to be done first
-        } else if (existing == BlockID.ICE) {
+        if (existing == BlockID.ICE) {
             world.setBlockType(pt, BlockID.AIR);
-        }
+        } else if (existing > 0) {
+        // Clear the container block so that it doesn't drop items
+            world.clearContainerBlockContents(pt);
+		}
 
         if (blockBag != null) {
             if (type > 0) {
@@ -606,26 +606,10 @@ public class EditSession {
      * @return height of highest block found or 'minY'
      */
     public int getHighestTerrainBlock(int x, int z, int minY, int maxY) {
-        return getHighestTerrainBlock(x, z, minY, maxY, false);
-    }
-
-    /**
-     * Returns the highest solid 'terrain' block which can occur naturally.
-     *
-     * @param x
-     * @param z
-     * @param minY minimal height
-     * @param maxY maximal height
-     * @param naturalOnly look at natural blocks or all blocks
-     * @return height of highest block found or 'minY'
-     */
-    public int getHighestTerrainBlock(int x, int z, int minY, int maxY, boolean naturalOnly) {
         for (int y = maxY; y >= minY; --y) {
             Vector pt = new Vector(x, y, z);
             int id = getBlockType(pt);
-            if (naturalOnly ? BlockType.isNaturalTerrainBlock(id) : !BlockType.canPassThrough(id)) {
-                return y;
-            }
+            return y;
         }
         return minY;
     }
@@ -2384,11 +2368,6 @@ public class EditSession {
                         break;
                     }
 
-                    // Snow should not cover these blocks
-                    if (BlockType.isTranslucent(id)) {
-                        break;
-                    }
-
                     // Too high?
                     if (y == world.getMaxY()) {
                         break;
@@ -2452,7 +2431,7 @@ public class EditSession {
 
                     default:
                         // ...and all non-passable blocks
-                        if (!BlockType.canPassThrough(id)) {
+                        if (id > 0) {
                             break loop;
                         }
                     }
@@ -2922,7 +2901,7 @@ public class EditSession {
 
         while (!queue.isEmpty()) {
             final BlockVector current = queue.removeFirst();
-            if (!BlockType.canPassThrough(getBlockType(current))) {
+            if (getBlockType(current) > 0) {
                 continue;
             }
 
