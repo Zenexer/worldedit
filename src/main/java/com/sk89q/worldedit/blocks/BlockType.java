@@ -804,4 +804,10 @@ public enum BlockType
 		dataAttachments.put(typeDataKey(type, east), PlayerDirection.EAST);
 		dataAttachments.put(typeDataKey(type, south), PlayerDirection.SOUTH);
 	}
+	
+	// WorldGuard needs this.
+	public static boolean isRailBlock(int type)
+	{
+		return type == BlockID.MINECART_TRACKS || type == BlockID.POWERED_RAIL;
+	}
 }
